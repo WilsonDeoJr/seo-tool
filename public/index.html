@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BizWisdom — SEO Content Intelligence</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-mark">BW</span>
+      <div>
+        <div class="brand-name">BizWisdom</div>
+        <div class="brand-sub">SEO Intelligence</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="generate" onclick="showView('generate')">
+        <span class="nav-icon">⚡</span> Generate
+      </button>
+      <button class="nav-item" data-view="clients" onclick="showView('clients')">
+        <span class="nav-icon">👥</span> Clients
+      </button>
+      <button class="nav-item" data-view="settings" onclick="showView('settings')">
+        <span class="nav-icon">⚙️</span> Settings
+      </button>
+    </nav>
+
+    <div class="sidebar-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Checking...</span>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- ── GENERATE VIEW ── -->
+    <div id="view-generate" class="view active">
+
+      <div class="view-header">
+        <h1 class="view-title">Content Generator</h1>
+        <p class="view-desc">Validate a keyword, analyse the competition, and generate a fully compliant article.</p>
+      </div>
+
+      <!-- Input form -->
+      <div class="card" id="inputCard">
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label>Target Keyword</label>
+              <input type="text" id="keywordInput" placeholder="e.g. amazon repricing software" class="input-large">
+            </div>
+            <div class="form-group">
+              <label>Client</label>
+              <select id="clientSelect">
+                <option value="">Select client...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Location</label>
+              <select id="locationSelect">
+                <option value="Australia">Australia</option>
+                <option value="United States">United States</option>
+                <option value="United Kingdom">United Kingdom</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-lg" id="validateBtn" onclick="runValidation()">
+            <span class="btn-icon">🔍</span> Validate Keyword
+          </button>
+        </div>
+      </div>
+
+      <!-- Pipeline progress -->
+      <div id="pipelineProgress" class="pipeline hidden">
+        <div class="pipeline-track">
+          <div class="pipeline-step" id="step-keyword">
+            <div class="step-dot"></div>
+            <div class="step-label">Keyword Data</div>
+          </div>
+          <div class="pipeline-connector"></div>
+          <div class="pipeline-step" id="step-rankability">
+            <div class="step-dot"></div>
+            <div class="step-label">Rankability</div>
+          </div>
+          <div class="pipeline-connector"></div>
+          <div class="pipeline-step" id="step-cannibal">
+            <div class="step-dot"></div>
+            <div class="step-label">Cannibalisation</div>
+          </div>
+          <div class="pipeline-connector"></div>
+          <div class="pipeline-step" id="step-serp">
+            <div class="step-dot"></div>
+            <div class="step-label">SERP Analysis</div>
+          </div>
+          <div class="pipeline-connector"></div>
+          <div class="pipeline-step" id="step-writing">
+            <div class="step-dot"></div>
+            <div class="step-label">Writing</div>
+          </div>
+          <div class="pipeline-connector"></div>
+          <div class="pipeline-step" id="step-compliance">
+            <div class="step-dot"></div>
+            <div class="step-label">Compliance</div>
+          </div>
+        </div>
+        <div class="pipeline-message" id="pipelineMessage">Starting...</div>
+      </div>
+
+      <!-- Results area -->
+      <div id="resultsArea"></div>
+
+    </div>
+
+    <!-- ── CLIENTS VIEW ── -->
+    <div id="view-clients" class="view">
+      <div class="view-header">
+        <h1 class="view-title">Client Profiles</h1>
+        <button class="btn btn-primary" onclick="showClientModal()">+ Add Client</button>
+      </div>
+      <div id="clientsGrid" class="clients-grid"></div>
+    </div>
+
+    <!-- ── SETTINGS VIEW ── -->
+    <div id="view-settings" class="view">
+      <div class="view-header">
+        <h1 class="view-title">Settings</h1>
+      </div>
+      <div class="card">
+        <div class="card-header">API Configuration</div>
+        <div class="card-body">
+          <p class="settings-note">API keys are configured in the <code>.env</code> file in the project root. Restart the server after making changes.</p>
+          <div id="apiStatusGrid" class="api-status-grid"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Mode</div>
+        <div class="card-body">
+          <div id="mockModeStatus"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Client modal -->
+<div id="clientModal" class="modal hidden">
+  <div class="modal-backdrop" onclick="hideClientModal()"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Client</h2>
+      <button onclick="hideClientModal()" class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group flex-2">
+          <label>Client Name *</label>
+          <input type="text" id="cName" placeholder="Seller Snap">
+        </div>
+        <div class="form-group">
+          <label>Domain</label>
+          <input type="text" id="cDomain" placeholder="sellersnap.io">
+        </div>
+        <div class="form-group">
+          <label>Domain Authority (DA)</label>
+          <input type="number" id="cDA" placeholder="50" min="1" max="100">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>English Variant</label>
+          <select id="cEnglish">
+            <option value="en-AU">Australian English</option>
+            <option value="en-US">American English</option>
+            <option value="en-GB">British English</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Output Format</label>
+          <select id="cOutput">
+            <option value="docx">Word (.docx)</option>
+            <option value="html">HTML</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Word Count Tolerance (±)</label>
+          <input type="number" id="cTolerance" value="20" min="5" max="100">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Tone / Voice</label>
+        <input type="text" id="cTone" placeholder="Professional, data-driven, Amazon seller audience">
+      </div>
+      <div class="form-group">
+        <label>Sitemap URL</label>
+        <input type="text" id="cSitemap" placeholder="https://example.com/sitemap.xml">
+      </div>
+      <div class="form-row">
+        <div class="form-group flex-2">
+          <label>Competitor Blacklist <span class="label-hint">(comma-separated domains)</span></label>
+          <input type="text" id="cBlacklist" placeholder="goaura.com, competitor.com">
+        </div>
+        <div class="form-group flex-2">
+          <label>Banned Words in Headings <span class="label-hint">(comma-separated)</span></label>
+          <input type="text" id="cBanned" placeholder="paradox, ripple effect">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group checkbox-group">
+          <label><input type="checkbox" id="cNoEmDashes" checked> No em dashes</label>
+        </div>
+        <div class="form-group checkbox-group">
+          <label><input type="checkbox" id="cNoContractions"> No contractions</label>
+        </div>
+        <div class="form-group checkbox-group">
+          <label><input type="checkbox" id="cGeoBox" checked> GEO callout box</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideClientModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

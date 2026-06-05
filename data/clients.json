@@ -1,0 +1,55 @@
+{
+  "clients": [
+    {
+      "id": "seller-snap",
+      "name": "Seller Snap",
+      "english_variant": "en-US",
+      "word_count_tolerance": 20,
+      "banned_words": ["architects", "paradox", "ripple effect", "wellbeing"],
+      "competitor_blacklist": ["goaura.com", "aura.com", "bqool.com", "appeagle.com"],
+      "sitemap_url": "https://sellersnap.io/sitemap.xml",
+      "output_format": "docx",
+      "highlight_primary": "red",
+      "highlight_lsi": "yellow",
+      "highlight_internal_links": "cyan",
+      "geo_callout_box": true,
+      "tone": "Professional, data-driven, Amazon seller audience",
+      "no_contractions": false,
+      "no_em_dashes": true,
+      "domain": "sellersnap.io",
+      "domain_authority": 52
+    },
+    {
+      "id": "champion-homes",
+      "name": "Champion Homes",
+      "english_variant": "en-AU",
+      "word_count_tolerance": 20,
+      "banned_words": ["ripple effect", "paradox"],
+      "competitor_blacklist": [],
+      "sitemap_url": "",
+      "output_format": "html",
+      "geo_callout_box": true,
+      "tone": "Warm, aspirational, Australian homebuilder audience",
+      "no_contractions": false,
+      "no_em_dashes": true,
+      "domain": "championhomes.com.au",
+      "domain_authority": 28
+    },
+    {
+      "id": "systematiq",
+      "name": "Systematiq",
+      "english_variant": "en-AU",
+      "word_count_tolerance": 20,
+      "banned_words": [],
+      "competitor_blacklist": [],
+      "sitemap_url": "",
+      "output_format": "docx",
+      "geo_callout_box": false,
+      "tone": "Technical, authoritative, defence and rail industry audience",
+      "no_contractions": true,
+      "no_em_dashes": true,
+      "domain": "systematiq.com.au",
+      "domain_authority": 18
+    }
+  ]
+}

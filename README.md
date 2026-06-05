@@ -1,7 +1,7 @@
 # BizWisdom SEO Content Intelligence Tool
 
 Autonomous SEO/GEO/AEO content pipeline. Validates keyword rankability before writing, 
-analyses the top 3 ranking articles, and generates fully compliant, formatted content.
+uses Gemini to estimate keyword opportunities, analyses available ranking content, and generates fully compliant, formatted content.
 
 ---
 
@@ -29,9 +29,8 @@ The app runs in mock mode by default — all pipeline steps work with simulated 
 Edit the `.env` file and add your keys:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...
-DATAFORSEO_LOGIN=your@email.com
-DATAFORSEO_PASSWORD=yourpassword
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.5-flash
 FIRECRAWL_API_KEY=fc-...
 JINA_API_KEY=jina_...
 MOCK_MODE=false
@@ -46,8 +45,7 @@ npm start
 
 | API | URL | Notes |
 |-----|-----|-------|
-| Anthropic | https://console.anthropic.com | Required for article writing |
-| DataForSEO | https://dataforseo.com | Required for keyword data |
+| Gemini | https://aistudio.google.com | Required for keyword estimates, gap analysis, and article writing |
 | Firecrawl | https://firecrawl.dev | Required for SERP scraping |
 | Jina.ai | https://jina.ai | Free tier available — fallback scraper |
 
@@ -70,7 +68,7 @@ seo-tool/
     ├── routes/
     │   └── api.js            ← All API endpoints
     └── modules/
-        ├── keyword.js        ← DataForSEO keyword intelligence
+        ├── keyword.js        ← Gemini keyword intelligence
         ├── rankability.js    ← Rankability scoring
         ├── serp.js           ← SERP scraping + gap analysis
         ├── cannibalisation.js ← Sitemap cannibalisation check
@@ -84,7 +82,7 @@ seo-tool/
 ## How It Works
 
 ### Phase 1 — Opportunity Validation
-1. Fetches keyword data (volume, difficulty, CPC, intent, SERP features)
+1. Generates AI-estimated keyword data (demand, difficulty, CPC signal, intent, SERP features)
 2. Calculates rankability score for the client's domain
 3. Returns GREEN / AMBER / RED verdict
 4. Checks client sitemap for cannibalisation risk

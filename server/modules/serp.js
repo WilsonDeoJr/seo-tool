@@ -1,6 +1,7 @@
-// serp.js — Scrapes top organic results and runs gap analysis via Claude
+// serp.js — Scrapes top organic results and runs gap analysis via Gemini
 const axios = require('axios');
 const { mockSerpContent, mockGapAnalysis } = require('./mock');
+const { callGemini, parseJsonFromText } = require('./gemini');
 
 const isMock = () => process.env.MOCK_MODE === 'true';
 
@@ -82,13 +83,13 @@ async function runGapAnalysis(keyword, scrapedContent, paaQuestions) {
     return mockGapAnalysis(keyword);
   }
 
-  const contentSummary = scrapedContent.map((article, i) =>
-    `Article ${i + 1} (${article.domain}, ${article.word_count} words):
-Headings: ${article.headings.join(', ')}
-Content excerpt: ${article.raw_content.slice(0, 1500)}`
-  ).join('\n\n---\n\n');
+  const contentSummary = scrapedContent.length
+    ? scrapedContent.map((article, i) =>
+      `Article ${i + 1} (${article.domain}, ${article.word_count} words):\nHeadings: ${article.headings.join(', ')}\nContent excerpt: ${article.raw_content.slice(0, 1500)}`
+    ).join('\n\n---\n\n')
+    : 'No competitor pages were scraped. Create the gap analysis from the keyword, user intent, and PAA questions.';
 
-  const prompt = `You are an expert SEO content strategist. Analyse the following top-ranking articles for the keyword "${keyword}" and produce a detailed content gap analysis.
+  const prompt = `You are an expert SEO content strategist. Analyse the available ranking context for the keyword "${keyword}" and produce a detailed content gap analysis.
 
 TOP-RANKING CONTENT:
 ${contentSummary}
@@ -98,41 +99,26 @@ ${paaQuestions.join('\n')}
 
 Respond in JSON only. No preamble. No markdown fences. Use this exact structure:
 {
-  "recommended_angle": "string — the unique content angle that beats the top 3",
+  "recommended_angle": "string — the unique content angle that beats the current content",
   "must_cover": ["array of specific topics/sections the new article must include"],
   "recommended_h2s": ["array of H2 heading suggestions for the new article"],
   "recommended_word_count": number,
   "differentiation_hook": "string — the one thing that makes this article stand out",
-  "topics_all_cover": ["topics covered by all top 3"],
-  "topics_missing": ["topics absent from top 3 — content opportunities"]
+  "topics_all_cover": ["topics commonly covered by competing content"],
+  "topics_missing": ["topics often missing from competing content — content opportunities"]
 }`;
 
-  const res = await callClaudeAPI(prompt, 'You are an expert SEO analyst. Return JSON only.');
-  try {
-    return JSON.parse(res.replace(/```json|```/g, '').trim());
-  } catch {
-    throw new Error('Gap analysis response could not be parsed. Check Claude API response.');
-  }
-}
-
-async function callClaudeAPI(userPrompt, systemPrompt) {
-  const res = await axios.post(
-    'https://api.anthropic.com/v1/messages',
-    {
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2000,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }]
-    },
-    {
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json'
-      }
-    }
+  const res = await callGemini(
+    prompt,
+    'You are an expert SEO analyst. Return valid JSON only.',
+    { maxOutputTokens: 2500, temperature: 0.3 }
   );
-  return res.data.content[0].text;
+
+  try {
+    return parseJsonFromText(res);
+  } catch {
+    throw new Error('Gap analysis response could not be parsed. Check Gemini API response.');
+  }
 }
 
 function delay(ms) {

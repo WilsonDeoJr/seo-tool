@@ -172,8 +172,7 @@ router.get('/status', (req, res) => {
     status: 'running',
     mock_mode: mockMode,
     apis_configured: {
-      anthropic: !!process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'your_anthropic_key_here',
-      dataforseo: !!process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_LOGIN !== 'your_dataforseo_login_here',
+      gemini: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here',
       firecrawl: !!process.env.FIRECRAWL_API_KEY && process.env.FIRECRAWL_API_KEY !== 'your_firecrawl_key_here',
       jina: !!process.env.JINA_API_KEY && process.env.JINA_API_KEY !== 'your_jina_key_here',
     }

@@ -1,6 +1,6 @@
-// writer.js — Article generation with word count enforcement and compliance
-const axios = require('axios');
+// writer.js — Article generation with Gemini, word count enforcement, and compliance
 const { mockArticle } = require('./mock');
+const { callGemini } = require('./gemini');
 
 const isMock = () => process.env.MOCK_MODE === 'true';
 
@@ -85,7 +85,7 @@ ${(keywordData.paa_questions || []).join('\n')}
 
 Write the complete article now. Hit the word count target.`;
 
-  return callClaudeAPI(userPrompt, systemPrompt, 4000);
+  return callGemini(userPrompt, systemPrompt, { maxOutputTokens: 5000, temperature: 0.55 });
 }
 
 async function patchArticle(draft, wordsNeeded, keyword, client) {
@@ -95,7 +95,7 @@ async function patchArticle(draft, wordsNeeded, keyword, client) {
 ARTICLE:
 ${draft}`;
 
-  return callClaudeAPI(prompt, `You are an expert SEO content writer. Write in ${isUS ? 'American' : 'Australian'} English. Never use em dashes.`, 5000);
+  return callGemini(prompt, `You are an expert SEO content writer. Write in ${isUS ? 'American' : 'Australian'} English. Never use em dashes.`, { maxOutputTokens: 6000, temperature: 0.45 });
 }
 
 async function trimArticle(draft, wordsOver, client) {
@@ -105,7 +105,7 @@ async function trimArticle(draft, wordsOver, client) {
 ARTICLE:
 ${draft}`;
 
-  return callClaudeAPI(prompt, `You are an expert SEO content editor. Write in ${isUS ? 'American' : 'Australian'} English.`, 5000);
+  return callGemini(prompt, `You are an expert SEO content editor. Write in ${isUS ? 'American' : 'Australian'} English.`, { maxOutputTokens: 6000, temperature: 0.35 });
 }
 
 function runComplianceCheck(content, client, brief) {
@@ -162,25 +162,6 @@ function countWords(text) {
   return text.replace(/```[\s\S]*?```/g, '').replace(/[#*_`\[\]]/g, '').trim().split(/\s+/).filter(Boolean).length;
 }
 
-async function callClaudeAPI(userPrompt, systemPrompt, maxTokens = 2000) {
-  const res = await axios.post(
-    'https://api.anthropic.com/v1/messages',
-    {
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: maxTokens,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }]
-    },
-    {
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json'
-      }
-    }
-  );
-  return res.data.content[0].text;
-}
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -34,8 +34,7 @@ function renderApiStatus(data) {
   if (!grid) return;
 
   const apis = [
-    { name: 'Anthropic Claude', key: 'anthropic' },
-    { name: 'DataForSEO', key: 'dataforseo' },
+    { name: 'Google Gemini', key: 'gemini' },
     { name: 'Firecrawl', key: 'firecrawl' },
     { name: 'Jina.ai', key: 'jina' },
   ];
@@ -205,7 +204,7 @@ async function runValidation() {
   document.getElementById('validateBtn').disabled = true;
   document.getElementById('resultsArea').innerHTML = '';
   showPipeline();
-  setPipelineStep('keyword', 'active', 'Fetching keyword data from DataForSEO...');
+  setPipelineStep('keyword', 'active', 'Generating keyword data with Gemini...');
 
   try {
     const data = await api('/api/validate', 'POST', { keyword, client_id: clientId, location });
@@ -250,19 +249,19 @@ function renderValidationResults(data) {
     <!-- Keyword stats -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">Search Volume</div>
+        <div class="stat-label">Estimated Demand</div>
         <div class="stat-value accent">${(kd.volume || 0).toLocaleString()}</div>
-        <div class="stat-sub">monthly searches</div>
+        <div class="stat-sub">AI-estimated monthly range</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Difficulty</div>
+        <div class="stat-label">Estimated Difficulty</div>
         <div class="stat-value ${kd.difficulty >= 60 ? 'red' : kd.difficulty >= 40 ? 'amber' : 'green'}">${kd.difficulty}</div>
         <div class="stat-sub">out of 100</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">CPC</div>
+        <div class="stat-label">Commercial Value</div>
         <div class="stat-value">\$${(kd.cpc || 0).toFixed(2)}</div>
-        <div class="stat-sub">avg cost per click</div>
+        <div class="stat-sub">AI-estimated CPC signal</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Intent</div>
@@ -278,7 +277,8 @@ function renderValidationResults(data) {
         <div class="stat-value ${r.daGap > 20 ? 'red' : r.daGap > 10 ? 'amber' : 'green'}">${r.daGap > 0 ? '+' : ''}${r.daGap}</div>
         <div class="stat-sub">vs avg competitor DA ${r.avgCompetitorDA}</div>
       </div>
-    </div>`;
+    </div>
+    ${kd.data_source ? `<div class="card"><div class="card-body" style="font-size:13px;color:var(--text3)">Data source: ${kd.data_source}</div></div>` : ''}`;
 
   // SERP features
   if (kd.serp_features && kd.serp_features.length) {

@@ -1,4 +1,4 @@
-// serp.js — Scrapes top organic results and runs gap analysis via Claude
+// serp.js — Scrapes top organic results and runs gap analysis via Gemini
 const axios = require('axios');
 const { mockSerpContent, mockGapAnalysis } = require('./mock');
 
@@ -107,32 +107,52 @@ Respond in JSON only. No preamble. No markdown fences. Use this exact structure:
   "topics_missing": ["topics absent from top 3 — content opportunities"]
 }`;
 
-  const res = await callClaudeAPI(prompt, 'You are an expert SEO analyst. Return JSON only.');
+  const res = await callGeminiAPI(prompt, 'You are an expert SEO analyst. Return JSON only.');
   try {
     return JSON.parse(res.replace(/```json|```/g, '').trim());
   } catch {
-    throw new Error('Gap analysis response could not be parsed. Check Claude API response.');
+    throw new Error('Gap analysis response could not be parsed. Check Gemini API response.');
   }
 }
 
-async function callClaudeAPI(userPrompt, systemPrompt) {
+async function callGeminiAPI(userPrompt, systemPrompt, maxOutputTokens = 2500) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'your_gemini_key_here') {
+    throw new Error('GEMINI_API_KEY is missing. Add it to your .env file or Render environment variables.');
+  }
+
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
   const res = await axios.post(
-    'https://api.anthropic.com/v1/messages',
+    endpoint,
     {
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2000,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }]
-    },
-    {
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json'
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: userPrompt }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens,
+        responseMimeType: 'application/json'
       }
-    }
+    },
+    { headers: { 'Content-Type': 'application/json' } }
   );
-  return res.data.content[0].text;
+
+  const parts = res.data?.candidates?.[0]?.content?.parts || [];
+  const text = parts.map(part => part.text || '').join('').trim();
+
+  if (!text) {
+    throw new Error('Gemini returned an empty response.');
+  }
+
+  return text;
 }
 
 function delay(ms) {

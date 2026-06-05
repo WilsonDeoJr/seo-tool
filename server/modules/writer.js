@@ -85,7 +85,7 @@ ${(keywordData.paa_questions || []).join('\n')}
 
 Write the complete article now. Hit the word count target.`;
 
-  return callClaudeAPI(userPrompt, systemPrompt, 4000);
+  return callGeminiAPI(userPrompt, systemPrompt, 6000);
 }
 
 async function patchArticle(draft, wordsNeeded, keyword, client) {
@@ -95,7 +95,7 @@ async function patchArticle(draft, wordsNeeded, keyword, client) {
 ARTICLE:
 ${draft}`;
 
-  return callClaudeAPI(prompt, `You are an expert SEO content writer. Write in ${isUS ? 'American' : 'Australian'} English. Never use em dashes.`, 5000);
+  return callGeminiAPI(prompt, `You are an expert SEO content writer. Write in ${isUS ? 'American' : 'Australian'} English. Never use em dashes.`, 7000);
 }
 
 async function trimArticle(draft, wordsOver, client) {
@@ -105,7 +105,7 @@ async function trimArticle(draft, wordsOver, client) {
 ARTICLE:
 ${draft}`;
 
-  return callClaudeAPI(prompt, `You are an expert SEO content editor. Write in ${isUS ? 'American' : 'Australian'} English.`, 5000);
+  return callGeminiAPI(prompt, `You are an expert SEO content editor. Write in ${isUS ? 'American' : 'Australian'} English.`, 7000);
 }
 
 function runComplianceCheck(content, client, brief) {
@@ -162,24 +162,43 @@ function countWords(text) {
   return text.replace(/```[\s\S]*?```/g, '').replace(/[#*_`\[\]]/g, '').trim().split(/\s+/).filter(Boolean).length;
 }
 
-async function callClaudeAPI(userPrompt, systemPrompt, maxTokens = 2000) {
+async function callGeminiAPI(userPrompt, systemPrompt, maxOutputTokens = 4000) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'your_gemini_key_here') {
+    throw new Error('GEMINI_API_KEY is missing. Add it to your .env file or Render environment variables.');
+  }
+
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
   const res = await axios.post(
-    'https://api.anthropic.com/v1/messages',
+    endpoint,
     {
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: maxTokens,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }]
-    },
-    {
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json'
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: userPrompt }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens
       }
-    }
+    },
+    { headers: { 'Content-Type': 'application/json' } }
   );
-  return res.data.content[0].text;
+
+  const parts = res.data?.candidates?.[0]?.content?.parts || [];
+  const text = parts.map(part => part.text || '').join('').trim();
+
+  if (!text) {
+    throw new Error('Gemini returned an empty response.');
+  }
+
+  return text;
 }
 
 function delay(ms) {

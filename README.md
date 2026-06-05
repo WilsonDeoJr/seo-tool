@@ -29,7 +29,8 @@ The app runs in mock mode by default — all pipeline steps work with simulated 
 Edit the `.env` file and add your keys:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.5-flash
 DATAFORSEO_LOGIN=your@email.com
 DATAFORSEO_PASSWORD=yourpassword
 FIRECRAWL_API_KEY=fc-...
@@ -46,7 +47,7 @@ npm start
 
 | API | URL | Notes |
 |-----|-----|-------|
-| Anthropic | https://console.anthropic.com | Required for article writing |
+| Gemini | https://aistudio.google.com/app/apikey | Required for gap analysis and article writing |
 | DataForSEO | https://dataforseo.com | Required for keyword data |
 | Firecrawl | https://firecrawl.dev | Required for SERP scraping |
 | Jina.ai | https://jina.ai | Free tier available — fallback scraper |
@@ -91,9 +92,9 @@ seo-tool/
 
 ### Phase 2 — Content Execution (only after GREEN or AMBER)
 1. Scrapes top 3 organic results
-2. Runs gap analysis — identifies what competitors miss
+2. Runs Gemini gap analysis — identifies what competitors miss
 3. Generates a content brief
-4. Writes the article with word count enforcement loop
+4. Writes the article with Gemini and word count enforcement loop
 5. Runs compliance audit (blacklist, banned words, em dashes, citations)
 6. Returns formatted output
 
